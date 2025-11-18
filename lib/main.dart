@@ -1,5 +1,8 @@
+import 'package:application_pos_dricocoffee/pages/auth/sign_in_pages.dart';
+import 'package:application_pos_dricocoffee/pages/splash_screen.dart';
 import 'package:application_pos_dricocoffee/services/supabase_client_service.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 void main() async {
@@ -11,17 +14,17 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Drico Coffee POS',
       debugShowCheckedModeBanner: false,
-      title: 'DricoCoffe',
       theme: ThemeData(
-        primarySwatch: Colors.orange,
+        textTheme: GoogleFonts.poppinsTextTheme(), 
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
-      home: Scaffold(
-        body: Center(child: Text('Berhasil jalan tanpa error ')),
-      ),
+      home: const SignInPages(),
     );
   }
 }
