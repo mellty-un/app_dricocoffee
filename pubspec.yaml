@@ -1,6 +1,6 @@
 name: application_pos_dricocoffee
 description: "A new Flutter project."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
@@ -13,11 +13,25 @@ dependencies:
   supabase_flutter: ^2.10.3
   provider: ^6.1.5+1
   google_fonts: ^6.3.2
+  fl_chart: ^0.65.0
+  image_picker: ^1.2.1
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+  pdf: ^3.11.3
+  printing: ^5.14.2
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/drico_logo.png"
+  background_color: "#36536b" 
+  adaptive_icon_foreground: "assets/images/drico_logo.png"
 
 flutter:
   uses-material-design: true
@@ -25,3 +39,4 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/drico_logo.png
+    - assets/images/cb.png

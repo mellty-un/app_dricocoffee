@@ -2,6 +2,9 @@ import 'package:application_pos_dricocoffee/pages/auth/register_pages.dart';
 import 'package:application_pos_dricocoffee/pages/dashboard/dashboard_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class SignInPages extends StatefulWidget {
   const SignInPages({super.key});
@@ -12,17 +15,94 @@ class SignInPages extends StatefulWidget {
 
 class _SignInPagesState extends State<SignInPages> {
   bool obscurePassword = true;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+
+  String? emailError;
+  String? passwordError;
+
+  Future<void> _signIn() async {
+    setState(() {
+      emailError = null;
+      passwordError = null;
+    });
+    bool hasError = false;
+
+    if (emailController.text.trim().isEmpty) {
+      emailError = "Email wajib diisi";
+      hasError = true;
+    } else if (!RegExp(
+      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+    ).hasMatch(emailController.text.trim())) {
+      emailError = "Format email tidak valid";
+      hasError = true;
+    } else if (!emailController.text.trim().toLowerCase().endsWith(
+      '@gmail.com',
+    )) {
+      emailError = "Hanya email @gmail.com yang diperbolehkan";
+      hasError = true;
+    }
+
+    if (passwordController.text.isEmpty) {
+      passwordError = "Password wajib diisi";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setState(() {});
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (response.user == null) {
+        throw 'Login gagal, silakan cek email & password';
+      }
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardPages()),
+          (route) => false,
+        );
+      }
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
 
   void _goToRegister() {
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const RegisterPages(),
-        transitionsBuilder: (_, animation, __, child) =>
-            FadeTransition(opacity: animation, child: child),
+        transitionsBuilder: (_, a, __, c) =>
+            FadeTransition(opacity: a, child: c),
         transitionDuration: const Duration(milliseconds: 300),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -78,7 +158,6 @@ class _SignInPagesState extends State<SignInPages> {
                     ),
                   ),
 
-                  // TOGGLE HEADER
                   Positioned(
                     bottom: -25,
                     left: 0,
@@ -120,7 +199,6 @@ class _SignInPagesState extends State<SignInPages> {
                                   ),
                                 ),
 
-                                // REGISTER
                                 Expanded(
                                   child: GestureDetector(
                                     onTap: _goToRegister,
@@ -145,7 +223,6 @@ class _SignInPagesState extends State<SignInPages> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 120),
 
               Padding(
@@ -153,6 +230,8 @@ class _SignInPagesState extends State<SignInPages> {
                 child: Column(
                   children: [
                     TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: "Email",
                         filled: true,
@@ -165,10 +244,12 @@ class _SignInPagesState extends State<SignInPages> {
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(22),
                         ),
+                        errorText: emailError,
                       ),
                     ),
                     const SizedBox(height: 35),
                     TextField(
+                      controller: passwordController,
                       obscureText: obscurePassword,
                       decoration: InputDecoration(
                         hintText: "Password",
@@ -182,6 +263,7 @@ class _SignInPagesState extends State<SignInPages> {
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(22),
                         ),
+                        errorText: passwordError,
                       ),
                     ),
                   ],
@@ -189,17 +271,13 @@ class _SignInPagesState extends State<SignInPages> {
               ),
 
               const SizedBox(height: 20),
-
               Padding(
                 padding: const EdgeInsets.only(right: 32),
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
+                    onTap: () =>
+                        setState(() => obscurePassword = !obscurePassword),
                     child: Text(
                       obscurePassword ? "Show password" : "Hide password",
                       style: TextStyle(
@@ -213,31 +291,34 @@ class _SignInPagesState extends State<SignInPages> {
               ),
 
               const SizedBox(height: 65),
-
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => DashboardPages()),
-                  );
-                },
+                onTap: isLoading ? null : _signIn,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     vertical: 13,
                     horizontal: 100,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF36536B),
+                    color: isLoading ? Colors.grey : const Color(0xFF36536B),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text(
-                    "Login",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
 
